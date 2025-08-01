@@ -13,4 +13,10 @@ namespace DapperDemo.Domain.Entities
         public string Department { get; set; }
         public decimal Salary { get; set; }
     }
+
+    public class EmployeeItem
+    {
+        public int ItemId { get; set; }
+        public string ItemName { get; set; }
+    }
 }

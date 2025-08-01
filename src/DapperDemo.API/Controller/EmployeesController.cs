@@ -9,19 +9,29 @@ namespace DapperDemo.API.Controller
     [Route("api/[controller]")]
     public class EmployeesController : ControllerBase
     {
-        private readonly IGenericRepository<Employee> _repo;
+        private readonly IEmployeeRepository _repo;
 
-        public EmployeesController(IGenericRepository<Employee> repo) => _repo = repo;
+        public EmployeesController(IEmployeeRepository repo) => _repo = repo;
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() =>
-            Ok(await _repo.GetAllAsync("sp_GetAllEmployees"));
+        public async Task<IActionResult> GetAll() => Ok(await _repo.GetAllAsync());
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id) => Ok(await _repo.GetByIdAsync(id));
 
         [HttpPost]
-        public async Task<IActionResult> Add(Employee e)
+        public async Task<IActionResult> Add(Employee emp)
         {
-            await _repo.ExecuteAsync("sp_AddEmployee", e);
+            await _repo.AddAsync(emp);
             return Ok();
         }
+
+        [HttpPost("save-with-items")]
+        public async Task<IActionResult> SaveWithItems(Employee emp, List<EmployeeItem> items)
+        {
+            var success = await _repo.SaveWithTransactionAsync(emp, items);
+            return success ? Ok() : StatusCode(500, "Failed to save");
+        }
     }
+
 }
