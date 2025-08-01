@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\DapperDemo.DAL\DapperDemo.DAL.csproj" />
+		<ProjectReference Include="..\DapperDemo.Database\DapperDemo.Database.csproj" />
+		<ProjectReference Include="..\DapperDemo.Domain\DapperDemo.Domain.csproj" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+
+	</ItemGroup>
+
+</Project>
