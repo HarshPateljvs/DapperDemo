@@ -11,11 +11,10 @@ namespace DapperDemo.DAL.Interface
 
     public interface IEmployeeRepository
     {
-        Task<IEnumerable<Employee>> GetAllAsync();
-        Task<Employee?> GetByIdAsync(int id);
-        Task<int> AddAsync(Employee employee, SqlTransaction? transaction = null);
-        Task<int> UpdateAsync(Employee employee, SqlTransaction? transaction = null);
-        Task<int> DeleteAsync(int id, SqlTransaction? transaction = null);
-        Task<bool> SaveWithTransactionAsync(Employee employee, List<EmployeeItem> items);
+        Task<bool> CreateEmployeeWithItemsAsync(Employee employee, List<EmployeeItem> items);
+        Task<IEnumerable<Employee>> GetAllEmployeesAsync();
+        Task<Employee?> GetEmployeeByIdAsync(int id);
+        Task<Employee> GetEmployeeSingleAsync(int id);
+        Task<int> GetEmployeeCountAsync();
     }
 }

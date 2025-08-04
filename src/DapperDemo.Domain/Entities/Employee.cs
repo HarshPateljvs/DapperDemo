@@ -8,15 +8,15 @@ namespace DapperDemo.Domain.Entities
 {
     public class Employee
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Department { get; set; }
-        public decimal Salary { get; set; }
+        public int EmployeeId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int Age { get; set; }
     }
 
     public class EmployeeItem
     {
-        public int ItemId { get; set; }
-        public string ItemName { get; set; }
+        public int EmployeeId { get; set; }
+
+        public string ItemName { get; set; } = string.Empty;
     }
 }

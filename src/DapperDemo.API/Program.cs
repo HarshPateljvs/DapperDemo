@@ -40,7 +40,9 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.Configure<MyAppSettings>(builder.Configuration.GetSection(nameof(MyAppSettings)));
 builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptionsMonitor<MyAppSettings>>().CurrentValue);
 
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 var app = builder.Build();
+AppServicesHelper.Services = app.Services;
 app.MapControllers();
 if (app.Environment.IsDevelopment())
 {
@@ -51,6 +53,5 @@ app.UseHttpsRedirection();
 //using var scope = app.Services.CreateScope();
 //var dbInit = scope.ServiceProvider.GetRequiredService<DbInitializer>();
 //await dbInit.RunScriptsAsync();
-
 app.Run();
 

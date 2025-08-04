@@ -9,29 +9,47 @@ namespace DapperDemo.API.Controller
     [Route("api/[controller]")]
     public class EmployeesController : ControllerBase
     {
-        private readonly IEmployeeRepository _repo;
+        private readonly IEmployeeRepository _service;
 
-        public EmployeesController(IEmployeeRepository repo) => _repo = repo;
-
-        [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _repo.GetAllAsync());
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id) => Ok(await _repo.GetByIdAsync(id));
+        public EmployeesController(IEmployeeRepository repo) => _service = repo;
 
         [HttpPost]
-        public async Task<IActionResult> Add(Employee emp)
+        public async Task<IActionResult> Create(EmployeeRequest request)
         {
-            await _repo.AddAsync(emp);
-            return Ok();
+            var success = await _service.CreateEmployeeWithItemsAsync(request.Employee, request.Items);
+            return success ? Ok("Employee and items saved.") : StatusCode(500, "Something went wrong.");
+        }
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = await _service.GetAllEmployeesAsync();
+            return Ok(result);
         }
 
-        [HttpPost("save-with-items")]
-        public async Task<IActionResult> SaveWithItems(Employee emp, List<EmployeeItem> items)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            var success = await _repo.SaveWithTransactionAsync(emp, items);
-            return success ? Ok() : StatusCode(500, "Failed to save");
+            var result = await _service.GetEmployeeByIdAsync(id);
+            return result is null ? NotFound() : Ok(result);
+        }
+
+        [HttpGet("single/{id}")]
+        public async Task<IActionResult> GetSingle(int id)
+        {
+            var result = await _service.GetEmployeeSingleAsync(id);
+            return Ok(result);
+        }
+
+        [HttpGet("count")]
+        public async Task<IActionResult> GetCount()
+        {
+            var count = await _service.GetEmployeeCountAsync();
+            return Ok(new { Count = count });
         }
     }
-
+}
+public class EmployeeRequest
+{
+    public Employee Employee { get; set; } = new();
+    public List<EmployeeItem> Items { get; set; } = new();
 }
