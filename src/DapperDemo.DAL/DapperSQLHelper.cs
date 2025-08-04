@@ -28,6 +28,32 @@ namespace DapperDemo.DAL
             OutputMappings = outputMappings;
         }
     }
+
+    public class PerformanceLogData
+    {
+        public string CommandText { get; set; }
+        public string commandType { get; set; }
+        public TimeSpan RequiredTime { get; set; }
+        public long RequiredMs { get; set; }
+        public string CommandParameter { get; set; }
+        public string CommandResponse { get; set; }
+        public string DatabaseName { get; set; }
+        public string MachineName { get; set; }
+    }
+
+    public class ErrorLogData
+    {
+        public string? ErrorMessage { get; set; }
+        public string? StackTrace { get; set; }
+        public string? Source { get; set; }
+        public string? ControllerName { get; set; }
+        public string? ActionName { get; set; }
+        public string? InputParameters { get; set; }
+        public string? UserId { get; set; }
+        public string? UserIP { get; set; }
+        public string? MachineName { get; set; }
+        public string? DatabaseName { get; set; }
+    }
     public static class DapperSQLHelper
     {
 

@@ -1,9 +1,11 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -34,6 +36,7 @@ namespace DapperDemo.DAL
     public abstract class DapperSQLManager<T> where T : IConnectionString
     {
         private const int DefaultTimeOut = 30;
+        public const bool IsLoggingEnabled = true;
         internal static string ConnectionString
         {
             get
@@ -54,32 +57,41 @@ namespace DapperDemo.DAL
             return new SqlConnection(ConnectionString);
         }
 
-        public static async Task<IEnumerable<TModel>> QueryAsync<TModel>(string storedProcedure, object? parameters = null)
+        public static Task<IEnumerable<TModel>> QueryAsync<TModel>(string storedProcedure, object? parameters = null)
         {
-            using var connection = CreateConnection();
-            connection.Open();
-            return await connection.QueryAsync<TModel>(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
+            return ExecuteAndLogAsync(
+                (conn, dynParams) => conn.QueryAsync<TModel>(storedProcedure, dynParams, commandType: CommandType.StoredProcedure),
+                storedProcedure,
+                parameters
+            );
         }
 
-        public static async Task<TModel?> QueryFirstOrDefaultAsync<TModel>(string storedProcedure, object? parameters = null)
+
+        public static Task<TModel?> QueryFirstOrDefaultAsync<TModel>(string storedProcedure, object? parameters = null)
         {
-            using var connection = CreateConnection();
-            connection.Open();
-            return await connection.QueryFirstOrDefaultAsync<TModel>(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
+            return ExecuteAndLogAsync(
+                (conn, dynParams) => conn.QueryFirstOrDefaultAsync<TModel>(storedProcedure, dynParams, commandType: CommandType.StoredProcedure),
+                storedProcedure,
+                parameters
+            );
         }
 
-        public static async Task<TModel> QuerySingleAsync<TModel>(string storedProcedure, object? parameters = null)
+        public static Task<TModel> QuerySingleAsync<TModel>(string storedProcedure, object? parameters = null)
         {
-            using var connection = CreateConnection();
-            connection.Open();
-            return await connection.QuerySingleAsync<TModel>(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
+            return ExecuteAndLogAsync(
+                (conn, dynParams) => conn.QuerySingleAsync<TModel>(storedProcedure, dynParams, commandType: CommandType.StoredProcedure),
+                storedProcedure,
+                parameters
+            );
         }
 
-        public static async Task<T> ExecuteScalarAsync<T>(string storedProcedure, object? parameters = null)
+        public static Task<T> ExecuteScalarAsync<T>(string storedProcedure, object? parameters = null)
         {
-            using var connection = CreateConnection();
-            connection.Open();
-            return await connection.ExecuteScalarAsync<T>(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
+            return ExecuteAndLogAsync(
+                (conn, dynParams) => conn.ExecuteScalarAsync<T>(storedProcedure, dynParams, commandType: CommandType.StoredProcedure),
+                storedProcedure,
+                parameters
+            );
         }
 
         public static async Task<bool> ExecuteStepsAsync(List<SpExecutionStep> steps)
@@ -129,9 +141,12 @@ namespace DapperDemo.DAL
                                 dynParams.Add(outParam, dbType: dbType, direction: ParameterDirection.Output, size: 4000);
                             }
                         }
-
-                        await connection.ExecuteAsync(step.SpName, dynParams, transaction, commandType: CommandType.StoredProcedure);
-
+                        await ExecuteAndLogAsync(
+                                (conn, dynParams) => conn.ExecuteAsync(step.SpName, dynParams, transaction, commandType: CommandType.StoredProcedure),
+                                    step.SpName,
+                                    dynParams,
+                                    transaction: transaction
+                                );
                         // Capture output
                         if (step.OutputParams != null)
                         {
@@ -144,14 +159,52 @@ namespace DapperDemo.DAL
                 transaction?.Commit();
                 return true;
             }
-            catch
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+                Console.WriteLine("Error Number: " + ex.Number);
+
+                if (ex.Number == 50002)  // Match your custom THROW error number
+                {
+                    Console.WriteLine("Caught specific business logic error.");
+                }
+                transaction?.Rollback();
+                throw;
+            }
+            catch (Exception ex)
             {
                 transaction?.Rollback();
                 throw;
             }
         }
 
+        #region SQL logging here 
 
+        private static async Task<T> ExecuteAndLogAsync<T>(
+    Func<IDbConnection, DynamicParameters, Task<T>> dbOperation,
+    string storedProcedure,
+    object? parameters,
+      IDbTransaction? transaction = null,
+    string? connectionStringOverride = null)
+        {
+            using var connection = transaction == null ? CreateConnection() : null;
+            var conn = transaction?.Connection ?? connection!;
+            if (conn.State != ConnectionState.Open) conn.Open();
+
+            var dynParams = parameters is DynamicParameters dp ? dp : new DynamicParameters(parameters);
+
+            var watch = Stopwatch.StartNew();
+            T result = await dbOperation(conn, dynParams);
+            watch.Stop();
+
+            if (IsLoggingEnabled)
+            {
+                DapperDemo.DAL.Logging.SqlLogger.LogStoredProcedureCall(storedProcedure, dynParams, watch, conn.ConnectionString);
+            }
+
+            return result;
+        }
+        #endregion
 
     }
 }

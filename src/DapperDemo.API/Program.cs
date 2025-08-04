@@ -1,4 +1,5 @@
 using DapperDemo.API.Data;
+using DapperDemo.API.Middleware;
 using DapperDemo.DAL;
 using DapperDemo.DAL.Implementation;
 using DapperDemo.DAL.Interface;
@@ -42,6 +43,7 @@ builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptionsMo
 
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 var app = builder.Build();
+app.UseMiddleware<RequestLoggingMiddleware>();
 AppServicesHelper.Services = app.Services;
 app.MapControllers();
 if (app.Environment.IsDevelopment())
