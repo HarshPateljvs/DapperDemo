@@ -1,9 +1,12 @@
 using DapperDemo.API.Data;
 using DapperDemo.API.Middleware;
+using DapperDemo.API.Validators;
 using DapperDemo.DAL;
 using DapperDemo.DAL.Implementation;
 using DapperDemo.DAL.Interface;
 using DapperDemo.Database;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +37,9 @@ builder.Services.AddAuthentication(options =>
 {
     // configure JWT
 });
-
+builder.Services.AddValidatorsFromAssemblyContaining<EmployeeValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<EmployeeRequestValidator>();
+builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

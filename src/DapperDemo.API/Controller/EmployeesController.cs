@@ -1,4 +1,5 @@
-﻿using DapperDemo.DAL.Interface;
+﻿using DapperDemo.DAL;
+using DapperDemo.DAL.Interface;
 using DapperDemo.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
