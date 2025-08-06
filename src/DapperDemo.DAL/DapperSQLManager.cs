@@ -181,11 +181,11 @@ namespace DapperDemo.DAL
         #region SQL logging here 
 
         private static async Task<T> ExecuteAndLogAsync<T>(
-    Func<IDbConnection, DynamicParameters, Task<T>> dbOperation,
-    string storedProcedure,
-    object? parameters,
-      IDbTransaction? transaction = null,
-    string? connectionStringOverride = null)
+            Func<IDbConnection, DynamicParameters, Task<T>> dbOperation,
+            string storedProcedure,
+            object? parameters,
+            IDbTransaction? transaction = null,
+            string? connectionStringOverride = null)
         {
             using var connection = transaction == null ? CreateConnection() : null;
             var conn = transaction?.Connection ?? connection!;
